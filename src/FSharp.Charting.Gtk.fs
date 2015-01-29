@@ -648,20 +648,30 @@ namespace FSharp.Charting
                 model.Series.Add(series)
                 series.ItemsSource <- data
                 let chart = GenericChart(model)
-                match data with 
-                | :? INotifyCollectionChanged as i -> 
-                      let rec handler = NotifyCollectionChangedEventHandler(fun _ _ -> 
-                        series.ItemsSource <- data
-                        match model.PlotControl with 
-                        | null -> ()
-                        | _ ->  
-                           // An exception will indicate form is no longer working, e.g. shutdown or disposed, so disconnect
-                           try model.RefreshPlot(true) 
-                           with _ -> i.CollectionChanged.RemoveHandler handler)
-                      i.CollectionChanged.AddHandler handler
-                | _ -> ()
+//                match data with 
+//                | :? INotifyCollectionChanged as i -> 
+//                      let rec handler = NotifyCollectionChangedEventHandler(fun _ _ -> 
+//                        series.ItemsSource <- data
+//                        match model.PlotControl with 
+//                        | null -> ()
+//                        | _ ->  
+//                           // An exception will indicate form is no longer working, e.g. shutdown or disposed, so disconnect
+//                           try model.RefreshPlot(true) 
+//                           with _ -> i.CollectionChanged.RemoveHandler handler)
+//                      i.CollectionChanged.AddHandler handler
+//                | _ -> ()
                 chart
-
+            member public this.ToPng(?size) =
+                use ms = new IO.MemoryStream()
+                let width, height = 
+                        match size with
+                        | Some s -> s
+                        | None -> 600, 400
+                let exp = OxyPlot.GtkSharp.PngExporter()
+                exp.Width <- width
+                exp.Height <- height
+                exp.Export(this.Model, ms)
+                ms.ToArray()
 
 #if INCOMPLETE_API
             /// Copy the contents of the chart as a bitmap
